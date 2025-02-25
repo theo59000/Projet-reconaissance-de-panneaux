@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "vmArgs": "-Djava.library.path=c:/opencv/build/bin",
+            "classpath": [
+                "lib/**/*.jar",
+                "C:/opencv/build/java/opencv-2413.jar"
+            ]
+        }
+    ],
+    "java.debug.settings.onBuildFailureProceed": true
+}
