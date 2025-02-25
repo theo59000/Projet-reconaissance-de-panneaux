@@ -34,6 +34,10 @@ import java.awt.image.BufferedImage;
 public class tools {
     public static Mat ReadPicture(String fichier){
         File f = new File(fichier);
+        if (!f.exists()) {
+            System.err.println("Erreur : le fichier n'existe pas : " + f.getAbsolutePath());
+            return new Mat();
+        }
         Mat m = Highgui.imread(f.getAbsolutePath());      //Highgui.imread pour opencv 2.*
         return m;
     }
