@@ -13,7 +13,7 @@ public class Main {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		System.out.println("OpenCV Version: " + Core.VERSION);
 		Mat mat = tools.ReadPicture("Images_partie_OpenCV//Billard_Balls.jpg");
-		//Mat mat = Mat.eye(3, 3,CvType.CV_8UC1);
+		Mat mat = Mat.eye(3, 3,CvType.CV_8UC1);
 		Mat mat_hsv = tools.BgrToHsv(mat);
 		double [] pix_color = mat_hsv.get(0,0);
 		System.out.println(pix_color[0] +" "+ pix_color[1] +" "+ pix_color[2]);
