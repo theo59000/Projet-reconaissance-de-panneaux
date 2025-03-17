@@ -1,0 +1,7 @@
+{
+    "java.dependency.packagePresentation": "flat",
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "Projet\\lib\\opencv-2413.jar"
+    ]
+}
