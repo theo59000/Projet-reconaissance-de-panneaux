@@ -1,12 +1,12 @@
 import java.util.List;
-import java.util.Vector;
+//import java.util.Vector;
 
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
+//import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
+//import org.opencv.core.Size;
+//import org.opencv.imgproc.Imgproc;
 
 public class Main {
 	public static void main(String[] args) {
