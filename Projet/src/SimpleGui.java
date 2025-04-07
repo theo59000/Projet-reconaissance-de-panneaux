@@ -1,19 +1,12 @@
 import javax.swing.*; // Importe les classes Swing pour l'interface graphique
 import java.awt.*; // Importe des classes AWT (utilisées par Swing)
+import java.awt.event.*;
 
-/**
- * Une classe simple pour démontrer une interface graphique basique en Java Swing.
- */
+
 public class SimpleGui {
 
-    /**
-     * La méthode principale (point d'entrée de l'application).
-     * @param args Arguments de la ligne de commande (non utilisés ici).
-     */
+
     public static void main(String[] args) {
-        // Il est recommandé de créer et de manipuler les composants Swing
-        // sur le 'Event Dispatch Thread' (EDT) pour éviter les problèmes de concurrence.
-        // SwingUtilities.invokeLater exécute le code fourni sur l'EDT.
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(); // Appelle notre méthode pour créer l'interface
@@ -21,41 +14,72 @@ public class SimpleGui {
         });
     }
 
-    /**
-     * Crée et affiche l'interface graphique.
-     */
+    // Création et affichage l'interface graphique.
+     
     private static void createAndShowGUI() {
-        // 1. Créer la fenêtre principale (le cadre)
-        // JFrame est la fenêtre de niveau supérieur.
-        JFrame frame = new JFrame("Ma Première Interface Graphique"); // Définit le titre de la fenêtre
-
-        // 2. Définir l'opération de fermeture par défaut
-        // EXIT_ON_CLOSE termine l'application lorsque l'utilisateur ferme la fenêtre.
+        // Création de la fenêtre principale
+        JFrame frame = new JFrame("Groupe : Les 4 Fantastiques");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(1000, 600);
+        frame.setLayout(null); 
 
-        // 3. Définir la taille de la fenêtre (en pixels)
-        frame.setSize(400, 300); // Largeur = 400, Hauteur = 300
+        // Chargement de l'image
+        ImageIcon icon = new ImageIcon("Projet\\Images_panneaux\\30.jpg");
 
-        // 4. Centrer la fenêtre sur l'écran (optionnel mais pratique)
-        frame.setLocationRelativeTo(null);
+        // Modification de la taille de l'image proportionnellement par rapport à sa taille d'origine
+        double facteur = 0.4; // Facteur de proportionnalité
+        int l = set_dimension(icon.getIconWidth(),facteur);
+        int L = set_dimension(icon.getIconHeight(), facteur);
+        Image image = icon.getImage().getScaledInstance(l, L, Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon = new ImageIcon(image);
+        JLabel label = new JLabel(scaledIcon);
+        
 
-        // 5. Créer un panneau (JPanel)
-        // JPanel est un conteneur léger pour organiser les composants.
-        JPanel panel = new JPanel();
+        // Positionnement manuel (x, y, largeur, hauteur)
+        int x = 60;
+        int y = 30;
+        int set_x = x-set_dimension(icon.getIconWidth(), 1-facteur)/2;
+        int set_y = y-set_dimension(icon.getIconHeight(), 1-facteur)/2;
+        label.setBounds(set_x, set_y, icon.getIconWidth(), icon.getIconHeight());
+        frame.add(label);
 
-        // 6. Créer un composant (par exemple, une étiquette de texte)
-        // JLabel affiche une ligne de texte (ou une image).
-        JLabel label = new JLabel("Bonjour le monde de Swing !");
+        // Crée un bouton
+        JButton bouton = new JButton("Détecter les panneaux de signalisation");
 
-        // 7. Ajouter le composant au panneau
-        panel.add(label);
 
-        // 8. Ajouter le panneau au "content pane" de la fenêtre
-        // Le content pane est la zone principale où les composants sont placés.
-        frame.getContentPane().add(panel);
+        // Ajoute une action au clic
+        bouton.addActionListener(e -> {
+            // Charger l'image
+            ImageIcon resultat = new ImageIcon("Projet\\Images_panneaux\\panneau_30.jpg");
+            // Dimensionner l'image
+            int l_res = set_dimension(resultat.getIconWidth(), 0.8);
+            int L_res = set_dimension(resultat.getIconHeight(), 0.8);
+            Image image_res = resultat.getImage().getScaledInstance(l_res, L_res, Image.SCALE_SMOOTH);
+            ImageIcon scaledIcon_res = new ImageIcon(image_res);
+            JLabel label_res = new JLabel(scaledIcon_res);
+            label_res.setBounds(x+set_dimension(icon.getIconWidth(), facteur),y+set_dimension(icon.getIconHeight(), facteur)/2-resultat.getIconHeight()/2,resultat.getIconWidth(),resultat.getIconHeight());
+            // Ajouter l'image
+            frame.add(label_res);
+        });
+        // Note : cliquer sur le bouton "Détecter les panneaux de signalisation" puis agrandir la
+        //        fenêtre pour afficher le panneau 
+        
 
-        // 9. Rendre la fenêtre visible
-        // Important : sans cela, la fenêtre existe mais n'est pas affichée.
+        int width_bouton = 300;
+        int height_bouton = 40;
+        // Positionner le bouton en-dessous de l'image centré
+        int x_bouton = x+set_dimension(icon.getIconWidth(), facteur)/2-width_bouton/2;
+        int y_bouton = y+set_dimension(icon.getIconHeight(), facteur)+10;
+        bouton.setBounds(x_bouton,y_bouton,width_bouton,height_bouton);
+        frame.add(bouton);
+
         frame.setVisible(true);
+    
+    }
+
+    public static int set_dimension(int mesure, double facteur){
+        double me = mesure*facteur;
+        int m = (int) Math.round(me);
+        return m;
     }
 }
