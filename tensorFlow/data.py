@@ -35,6 +35,7 @@ model = tf.keras.models.Sequential([
     tf.keras.layers.MaxPooling2D(),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(len(label_map), activation='softmax')
 ])
 
@@ -42,7 +43,7 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-model.fit(train_dataset, epochs=10,verbose = 1)
+model.fit(train_dataset, epochs=10,verbose = 1, validation_data = val_dataset,shuffle = True)
 
 
 # Évaluer le modèle sur les données de test
