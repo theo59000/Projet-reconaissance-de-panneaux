@@ -24,12 +24,12 @@ public class SimpleGui {
         frame.setLayout(null); 
 
         // Chargement de l'image
-        ImageIcon icon = new ImageIcon("Projet\\Images_panneaux\\30.jpg");
-
+        ImageIcon icon = new ImageIcon("Images_panneaux\\30.jpg");
         // Modification de la taille de l'image proportionnellement par rapport à sa taille d'origine
         double facteur = 0.4; // Facteur de proportionnalité
         int l = set_dimension(icon.getIconWidth(),facteur);
         int L = set_dimension(icon.getIconHeight(), facteur);
+        
         Image image = icon.getImage().getScaledInstance(l, L, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(image);
         JLabel label = new JLabel(scaledIcon);
@@ -50,7 +50,7 @@ public class SimpleGui {
         // Ajoute une action au clic
         bouton.addActionListener(e -> {
             // Charger l'image
-            ImageIcon resultat = new ImageIcon("Projet\\Images_panneaux\\panneau_30.jpg");
+            ImageIcon resultat = new ImageIcon("Images_panneaux\\"+choix_panneaux(0));
             // Dimensionner l'image
             int l_res = set_dimension(resultat.getIconWidth(), 0.8);
             int L_res = set_dimension(resultat.getIconHeight(), 0.8);
@@ -81,5 +81,26 @@ public class SimpleGui {
         double me = mesure*facteur;
         int m = (int) Math.round(me);
         return m;
+    }
+
+    public static String choix_panneaux(int choix){
+        if (choix == 30) {
+            return "panneau_30.jpg";
+        }
+        else if (choix == 50){
+            return "panneau_50.jpg";
+        }
+        else if (choix == 70){
+            return "panneau_70.jpg";
+        }
+        else if (choix == 90){
+            return "panneau_90.jpg";
+        }
+        else if (choix == 110){
+            return "panneau_110.jpg";
+        }
+        else {
+            return "panneau_voiture.jpg";
+        }
     }
 }
