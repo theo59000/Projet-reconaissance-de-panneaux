@@ -5,11 +5,10 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Base64;
 import javax.imageio.ImageIO;
 
-
 public class SimpleGui {
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -20,13 +19,12 @@ public class SimpleGui {
     }
 
     // Création et affichage l'interface graphique.
-     
     private static void createAndShowGUI() {
         // Création de la fenêtre principale
         JFrame frame = new JFrame("Groupe : Les 4 Fantastiques");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 600);
-        frame.setLayout(null); 
+        frame.setLayout(null);
 
         // Chargement de l'image
         String imagePath = "ref30.jpg";
@@ -39,7 +37,6 @@ public class SimpleGui {
         Image image = icon.getImage().getScaledInstance(l, L, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(image);
         JLabel label = new JLabel(scaledIcon);
-        
 
         // Positionnement manuel (x, y, largeur, hauteur)
         int x = 60;
@@ -52,7 +49,6 @@ public class SimpleGui {
         // Crée un bouton
         JButton bouton = new JButton("Détecter les panneaux de signalisation");
 
-
         // Ajoute une action au clic
         bouton.addActionListener(e -> {
             try {
@@ -64,7 +60,7 @@ public class SimpleGui {
                 con.setRequestMethod("POST");
                 con.setDoOutput(true);
                 con.setRequestProperty("Content-Type", "application/octet-stream");
-        
+
                 // Lire l'image et envoyer les octets
                 try (OutputStream os = con.getOutputStream();
                      FileInputStream fis = new FileInputStream(imageFile)) {
@@ -74,33 +70,63 @@ public class SimpleGui {
                         os.write(buffer, 0, bytesRead);
                     }
                 }
-        
+
                 // Lire la réponse complète
-BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-String inputLine;
-StringBuilder response = new StringBuilder();
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = in.readLine()) != null) {
+                    sb.append(line);
+                }
+                in.close();
 
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
+                String response = sb.toString();
+                System.out.println("Réponse brute de l'API : " + response);
 
-// Affichage dans la console pour debug
-System.out.println("Réponse brute de l'API : " + response.toString());
+                String labelValue = "Inconnu";
+                String base64Image = null;
 
-// Affichage dans l'interface
-JLabel resultLabel = new JLabel("Résultat : " + response.toString());
-resultLabel.setBounds(x + 400, y + 200, 400, 30);
-frame.add(resultLabel);
-frame.repaint();
+                try {
+                    // Cherche la valeur du champ "class"
+                    int classIndex = response.indexOf("\"class\"");
+                    if (classIndex != -1) {
+                        int colonIndex = response.indexOf(":", classIndex);
+                        int quoteStart = response.indexOf("\"", colonIndex);
+                        int quoteEnd = response.indexOf("\"", quoteStart + 1);
+                        labelValue = response.substring(quoteStart + 1, quoteEnd);
+                    }
 
-        
+                    // Cherche la valeur du champ "image"
+                    int imageIndex = response.indexOf("\"image\"");
+                    if (imageIndex != -1) {
+                        int colonIndex = response.indexOf(":", imageIndex);
+                        int quoteStart = response.indexOf("\"", colonIndex);
+                        int quoteEnd = response.indexOf("\"", quoteStart + 1);
+                        base64Image = response.substring(quoteStart + 1, quoteEnd);
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                //Affichage dans l'interface
+                JLabel resultLabel = new JLabel("Résultat : " + labelValue);
+                resultLabel.setBounds(x + 200, y + 200, 300, 30);
+                frame.add(resultLabel);
+
+                if (base64Image != null) {
+                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                    ImageIcon annotatedIcon = new ImageIcon(imageBytes);
+                    JLabel annotatedLabel = new JLabel(annotatedIcon);
+                    annotatedLabel.setBounds(x + 400, y + 50,
+                            annotatedIcon.getIconWidth(), annotatedIcon.getIconHeight());
+                    frame.add(annotatedLabel);
+                }
+                frame.repaint();
+
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         });
-        
-        
 
         int width_bouton = 300;
         int height_bouton = 40;
@@ -111,7 +137,7 @@ frame.repaint();
         frame.add(bouton);
 
         frame.setVisible(true);
-    
+
     }
 
     public static int set_dimension(int mesure, double facteur){
