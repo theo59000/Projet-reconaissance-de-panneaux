@@ -11,6 +11,8 @@ dans le dossier Projet-reconaissance-de-panneaux\Projet\lib
 
 Nous avons utilisé la version 2.4.13.0 d'opencv. 
 
+insatllez la bibliothèque flask sur python 
+
 ## Partie réseaux de neurones
 1) Le réseaux de neurones ne peut pas être push sur GitHub car trop volumeux,
 Pour l'avoir en local, lancer le fichier tensorflow/data.py
