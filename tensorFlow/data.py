@@ -52,3 +52,4 @@ print(f"Test Loss: {loss}")
 print(f"Test Accuracy: {accuracy}")
 
 model.summary()
+model.save("Detection_panneaux-3/my_model.keras")
