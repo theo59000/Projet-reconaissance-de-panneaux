@@ -10,3 +10,16 @@ normalement la bibliothèque opencv est importé directement, mais vérifié bie
 dans le dossier Projet-reconaissance-de-panneaux\Projet\lib
 
 Nous avons utilisé la version 2.4.13.0 d'opencv. 
+
+## Partie réseaux de neurones
+1) Le réseaux de neurones ne peut pas être push sur GitHub car trop volumeux,
+Pour l'avoir en local, lancer le fichier tensorflow/data.py
+
+2) Lancer l'api qui va appeler ce réseau , ouvrir l'éditeur de commande 
+dans le dossier Projet-Reconaissance-de-panneaux et écrire :
+python api.py 
+
+3) Lancer l'interface , ouvrir un deuxième éditeur de commande dans
+le dossier Projet-reconaissance-de-panneaux\Projet\src , tapez :
+javac SimpleGui.java (pour compiler le code)
+java SimpleGui       (lancer l'interface)
