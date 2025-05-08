@@ -1,0 +1,25 @@
+item {
+    name: "speed_30",
+    id: 0,
+    display_name: "speed_30"
+}
+item {
+    name: "speed_50",
+    id: 1,
+    display_name: "speed_50"
+}
+item {
+    name: "speed_70",
+    id: 2,
+    display_name: "speed_70"
+}
+item {
+    name: "speed_80",
+    id: 3,
+    display_name: "speed_80"
+}
+item {
+    name: "speed_90",
+    id: 4,
+    display_name: "speed_90"
+}

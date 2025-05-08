@@ -27,7 +27,7 @@ public class SimpleGui {
         frame.setLayout(null);
 
         // Chargement de l'image
-        String imagePath = "ref30.jpg";
+        String imagePath = "s90_20.jpg";
         ImageIcon icon = new ImageIcon(imagePath);
 
         // Modification de la taille de l'image proportionnellement par rapport à sa taille d'origine

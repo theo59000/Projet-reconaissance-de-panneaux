@@ -9,6 +9,7 @@ def parse_tfrecord(example):
     image = tf.image.decode_jpeg(example['image/encoded'], channels=3)
     image = tf.image.resize(image, [224, 224]) / 255.0
     label = tf.sparse.to_dense(example['image/object/class/label'])
+    
     return image, label[0]  # prend juste la première classe (pour classification simple)
 
 def adjust_labels(image, labels):
