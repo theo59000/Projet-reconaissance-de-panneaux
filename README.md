@@ -6,7 +6,6 @@ Ce projet est une application Java qui permet la reconnaissance de panneaux de s
 
 - Java JDK 11 ou supérieur
 - VLC Media Player (version 3.0 ou supérieure)
-- Maven (optionnel, pour la gestion des dépendances)
 
 ## Installation des Dépendances
 
@@ -18,13 +17,7 @@ Ce projet est une application Java qui permet la reconnaissance de panneaux de s
 
 ### 2. Installation des Bibliothèques Java
 
-#### Option 1 : Utilisation de Maven (Recommandé)
-
-Si vous utilisez Maven, les dépendances seront automatiquement téléchargées. Le fichier `pom.xml` est déjà configuré avec les dépendances nécessaires.
-
-#### Option 2 : Installation Manuelle
-
-Si vous n'utilisez pas Maven, vous devez télécharger manuellement les fichiers JAR suivants et les placer dans le dossier `Projet/lib/` :
+Téléchargez manuellement les fichiers JAR suivants et placez-les dans le dossier `Projet/lib/` :
 
 1. VLCJ :
    - [vlcj-4.8.2.jar](https://repo1.maven.org/maven2/uk/co/caprica/vlcj/4.8.2/vlcj-4.8.2.jar)
@@ -33,6 +26,9 @@ Si vous n'utilisez pas Maven, vous devez télécharger manuellement les fichiers
 2. JNA (Java Native Access) :
    - [jna-5.13.0.jar](https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar)
    - [jna-platform-5.13.0.jar](https://repo1.maven.org/maven2/net/java/dev/jna/jna-platform/5.13.0/jna-platform-5.13.0.jar)
+
+3. OpenCV (si besoin pour la partie traitement d'image) :
+   - Placez le JAR OpenCV dans `Projet/lib/`
 
 ### 3. Configuration de l'Environnement de Développement
 
@@ -50,15 +46,13 @@ Si vous n'utilisez pas Maven, vous devez télécharger manuellement les fichiers
 
 ## Compilation et Exécution
 
-### Avec Maven :
-```bash
-mvn clean compile
-mvn exec:java -Dexec.mainClass="Interface_image1"
-```
-
-### Sans Maven :
+### Compilation :
 ```bash
 javac -cp "Projet/lib/*" Projet/src/Interface_image1.java
+```
+
+### Exécution :
+```bash
 java -cp "Projet/lib/*;Projet/src" Interface_image1
 ```
 
