@@ -27,7 +27,7 @@ Téléchargez manuellement les fichiers JAR suivants et placez-les dans le dossi
    - [jna-5.13.0.jar](https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar)
    - [jna-platform-5.13.0.jar](https://repo1.maven.org/maven2/net/java/dev/jna/jna-platform/5.13.0/jna-platform-5.13.0.jar)
 
-3. OpenCV (si besoin pour la partie traitement d'image) :
+3. OpenCV  :
    - Placez le JAR OpenCV dans `Projet/lib/`
 
 ### 3. Configuration de l'Environnement de Développement
@@ -70,6 +70,32 @@ Si vous rencontrez des erreurs lors de l'exécution :
 3. Vérifiez que le chemin vers VLC est correctement configuré dans les variables d'environnement système
 
 4. En cas d'erreur "NoClassDefFoundError", vérifiez que tous les fichiers JAR sont bien inclus dans le classpath
+
+5. Si vous rencontrez des problèmes de compilation ou d'exécution inexpliqués :
+   - Supprimez le dossier `bin` s'il existe
+   - Exécutez `javac -cp "Projet/lib/*" Projet/src/Interface_image1.java` pour recompiler
+   - Si le problème persiste, essayez de nettoyer le workspace :
+     ```bash
+     # Windows
+     rmdir /s /q bin
+     del /s /q *.class
+     
+     # Linux/Mac
+     rm -rf bin/
+     rm -f *.class
+     ```
+   Puis recompilez le projet.
+
+6. Pour nettoyer le workspace sous VSCode :
+   - Appuyez sur `Ctrl+Shift+P` (Windows/Linux) ou `Cmd+Shift+P` (Mac)
+   - Tapez "Java: Clean Java Language Server Workspace"
+   - Sélectionnez "Restart and delete" dans le menu déroulant
+   - Attendez que VSCode redémarre
+   - Si le problème persiste, vous pouvez aussi :
+     - Fermer VSCode
+     - Supprimer le dossier `.vscode` du projet
+     - Supprimer le dossier `bin` s'il existe
+     - Rouvrir VSCode et recompiler le projet
 
 ## Support
 
