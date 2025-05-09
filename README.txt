@@ -19,7 +19,7 @@ Pour l'avoir en local, lancer le fichier tensorflow/data.py
 
 2) Lancer l'api qui va appeler ce réseau , ouvrir l'éditeur de commande 
 dans le dossier Projet-Reconaissance-de-panneaux et écrire :
-python api.py 
+python api_tensor.py 
 
 3) Lancer l'interface , ouvrir un deuxième éditeur de commande dans
 le dossier Projet-reconaissance-de-panneaux\Projet\src , tapez :
