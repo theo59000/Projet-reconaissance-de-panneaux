@@ -11,6 +11,12 @@ import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+import java.util.Base64;
+import org.json.JSONObject;
 
 public class Interface_image1 extends JFrame {
 
@@ -23,7 +29,8 @@ public class Interface_image1 extends JFrame {
     JLabel imageLabel2;
     JPanel mainPanel;
     JPanel controlPanel;
-    JPanel videoSurface;
+    JPanel optionsPanel;
+    JTabbedPane tabbedPane;
 
     // Paramètres configurables
     private double imageScaleFactor = 0.5;
@@ -42,16 +49,11 @@ public class Interface_image1 extends JFrame {
 
     private BufferedImage originalImage = null;
 
-    // Video player components
-    private EmbeddedMediaPlayerComponent mediaPlayerComponent;
-    private JSlider progressSlider;
-    private Timer progressTimer;
-    private boolean isPlaying = false;
-
     public Interface_image1() {
-        super("Projet Twizy - Reconnaissance de Panneaux");
+        super("Détection Image - Reconnaissance de Panneaux");
         setupFrame();
         createMainPanel();
+        createTabbedPane();
         setupBackground();
         setVisible(true);
     }
@@ -81,58 +83,32 @@ public class Interface_image1 extends JFrame {
         imageLabel2.setBounds(x2, y2, l2, h2);
         imageLabel2.setBorder(BorderFactory.createLineBorder(SECONDARY_COLOR, 2));
         mainPanel.add(imageLabel2);
+    }
 
-        // Surface de lecture vidéo
-        videoSurface = new JPanel();
-        videoSurface.setBounds(50, 50, 800, 500);
-        videoSurface.setBackground(Color.BLACK);
-        mainPanel.add(videoSurface);
+    private void createTabbedPane() {
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setBounds(900, 50, 250, 400);
+        tabbedPane.setBackground(new Color(255, 255, 255, 200));
+        mainPanel.add(tabbedPane);
 
-        // Panneau de contrôle vidéo
-        JPanel videoControls = new JPanel(new BorderLayout());
-        videoControls.setBounds(50, 560, 800, 100);
-        videoControls.setBackground(new Color(255, 255, 255, 200));
-        mainPanel.add(videoControls);
-
-        // Slider de progression
-        progressSlider = new JSlider(0, 100, 0);
-        progressSlider.setEnabled(false);
-        progressSlider.addChangeListener(e -> {
-            if (!progressSlider.getValueIsAdjusting() && mediaPlayerComponent != null) {
-                mediaPlayerComponent.mediaPlayer().controls().setPosition(progressSlider.getValue() / 100.0f);
-            }
-        });
-        videoControls.add(progressSlider, BorderLayout.NORTH);
-
-        // Boutons de contrôle
-        JPanel controlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        controlButtons.setBackground(new Color(255, 255, 255, 200));
-
-        JButton openButton = createStyledButton("Ouvrir Vidéo");
-        openButton.addActionListener(e -> openVideo());
-        controlButtons.add(openButton);
-
-        JButton playButton = createStyledButton("Lecture");
-        playButton.addActionListener(e -> togglePlay());
-        controlButtons.add(playButton);
-
-        JButton stopButton = createStyledButton("Stop");
-        stopButton.addActionListener(e -> stopVideo());
-        controlButtons.add(stopButton);
-
-        videoControls.add(controlButtons, BorderLayout.CENTER);
-
-        // Panneau de contrôle pour les images
+        // Onglet Contrôles
         controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
-        controlPanel.setBounds(900, 50, 250, 200);
         controlPanel.setBackground(new Color(255, 255, 255, 200));
-        controlPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        mainPanel.add(controlPanel);
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        createControlPanel();
+        tabbedPane.addTab("Contrôles", new ImageIcon(), controlPanel);
 
+        // Onglet Options
+        optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.setBackground(new Color(255, 255, 255, 200));
+        optionsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        createOptionsPanel();
+        tabbedPane.addTab("Options", new ImageIcon(), optionsPanel);
+    }
+
+    private void createControlPanel() {
         // Titre du panneau de contrôle
         JLabel titleLabel = new JLabel("Contrôles");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
@@ -151,12 +127,14 @@ public class Interface_image1 extends JFrame {
         JButton bouton = createStyledButton("Détection panneaux");
         bouton.addActionListener(e -> detecter_panneau());
         controlPanel.add(bouton);
+        controlPanel.add(Box.createVerticalStrut(15));
 
-        // Timer pour mettre à jour la progression
-        progressTimer = new Timer(1000, e -> updateProgress());
-
-        // Initialiser VLC
-        initializeVLC();
+        // Bouton pour ouvrir la fenêtre de détection vidéo
+        JButton videoButton = createStyledButton("Détection Vidéo");
+        videoButton.addActionListener(e -> {
+            new VideoDetectionWindow();
+        });
+        controlPanel.add(videoButton);
     }
 
     private JButton createStyledButton(String text) {
@@ -169,7 +147,6 @@ public class Interface_image1 extends JFrame {
         button.setMaximumSize(new Dimension(200, 40));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Effet de survol
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 button.setBackground(SECONDARY_COLOR);
@@ -180,6 +157,122 @@ public class Interface_image1 extends JFrame {
         });
         
         return button;
+    }
+
+    private void createOptionsPanel() {
+        // Titre
+        JLabel titleLabel = new JLabel("Paramètres");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setForeground(PRIMARY_COLOR);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        optionsPanel.add(titleLabel);
+        optionsPanel.add(Box.createVerticalStrut(20));
+
+        // Échelle de l'image principale
+        JPanel scalePanel = createOptionPanel("Échelle de l'image principale");
+        JSlider imageScaleSlider = new JSlider(JSlider.HORIZONTAL, 25, 100, 50);
+        imageScaleSlider.setMajorTickSpacing(25);
+        imageScaleSlider.setMinorTickSpacing(5);
+        imageScaleSlider.setPaintTicks(true);
+        imageScaleSlider.setPaintLabels(true);
+        imageScaleSlider.addChangeListener(e -> {
+            if (!imageScaleSlider.getValueIsAdjusting()) {
+                imageScaleFactor = imageScaleSlider.getValue() / 100.0;
+                if (originalImage != null) {
+                    refreshMainImage();
+                }
+            }
+        });
+        scalePanel.add(imageScaleSlider);
+        optionsPanel.add(scalePanel);
+        optionsPanel.add(Box.createVerticalStrut(15));
+
+        // Échelle de l'image de détection
+        JPanel detectionScalePanel = createOptionPanel("Échelle de détection");
+        JSlider detectionScaleSlider = new JSlider(JSlider.HORIZONTAL, 25, 100, 70);
+        detectionScaleSlider.setMajorTickSpacing(25);
+        detectionScaleSlider.setMinorTickSpacing(5);
+        detectionScaleSlider.setPaintTicks(true);
+        detectionScaleSlider.setPaintLabels(true);
+        detectionScaleSlider.addChangeListener(e -> {
+            detectionScaleFactor = detectionScaleSlider.getValue() / 100.0;
+            if (imageLabel2.getIcon() != null) {
+                refreshDetectionImage();
+            }
+        });
+        detectionScalePanel.add(detectionScaleSlider);
+        optionsPanel.add(detectionScalePanel);
+        optionsPanel.add(Box.createVerticalStrut(15));
+
+        // Afficher les bordures
+        JPanel borderPanel = createOptionPanel("Afficher les bordures");
+        JCheckBox borderCheckBox = new JCheckBox();
+        borderCheckBox.setSelected(showBorders);
+        borderCheckBox.addActionListener(e -> {
+            showBorders = borderCheckBox.isSelected();
+            updateBorders();
+        });
+        borderPanel.add(borderCheckBox);
+        optionsPanel.add(borderPanel);
+        optionsPanel.add(Box.createVerticalStrut(15));
+
+        // Détection automatique
+        JPanel autoDetectPanel = createOptionPanel("Détection automatique");
+        JCheckBox autoDetectCheckBox = new JCheckBox();
+        autoDetectCheckBox.setSelected(autoDetect);
+        autoDetectCheckBox.addActionListener(e -> {
+            autoDetect = autoDetectCheckBox.isSelected();
+        });
+        autoDetectPanel.add(autoDetectCheckBox);
+        optionsPanel.add(autoDetectPanel);
+    }
+
+    private JPanel createOptionPanel(String label) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBackground(new Color(255, 255, 255, 200));
+        JLabel optionLabel = new JLabel(label);
+        optionLabel.setForeground(TEXT_COLOR);
+        panel.add(optionLabel);
+        return panel;
+    }
+
+    private void updateBorders() {
+        if (showBorders) {
+            imageLabel.setBorder(BorderFactory.createLineBorder(PRIMARY_COLOR, 2));
+            imageLabel2.setBorder(BorderFactory.createLineBorder(SECONDARY_COLOR, 2));
+        } else {
+            imageLabel.setBorder(null);
+            imageLabel2.setBorder(null);
+        }
+    }
+
+    private void refreshMainImage() {
+        if (originalImage != null) {
+            l1 = (int)(originalImage.getWidth() * imageScaleFactor);
+            h1 = (int)(originalImage.getHeight() * imageScaleFactor);
+            Image imgReduite = originalImage.getScaledInstance(l1, h1, Image.SCALE_SMOOTH);
+            imageLabel.setIcon(new ImageIcon(imgReduite));
+            imageLabel.setBounds(x1, y1, l1, h1);
+            updateDetectionImagePosition();
+        }
+    }
+
+    private void refreshDetectionImage() {
+        if (imageLabel2.getIcon() != null) {
+            ImageIcon icon = (ImageIcon) imageLabel2.getIcon();
+            Image img = icon.getImage();
+            l2 = (int)(img.getWidth(null) * detectionScaleFactor);
+            h2 = (int)(img.getHeight(null) * detectionScaleFactor);
+            Image imgReduite = img.getScaledInstance(l2, h2, Image.SCALE_SMOOTH);
+            imageLabel2.setIcon(new ImageIcon(imgReduite));
+            updateDetectionImagePosition();
+        }
+    }
+
+    private void updateDetectionImagePosition() {
+        x2 = x1 + (l1 - l2) / 2;
+        y2 = y1 + h1 + 20;
+        imageLabel2.setBounds(x2, y2, l2, h2);
     }
 
     private void setupBackground() {
@@ -215,21 +308,14 @@ public class Interface_image1 extends JFrame {
             File fichier = fileChooser.getSelectedFile();
 
             try {
-                // Sauvegarder l'image originale
                 originalImage = ImageIO.read(fichier);
-                
-                // Appliquer l'échelle initiale
                 l1 = (int)(originalImage.getWidth() * imageScaleFactor);
                 h1 = (int)(originalImage.getHeight() * imageScaleFactor);
-
                 Image imgReduite = originalImage.getScaledInstance(l1, h1, Image.SCALE_SMOOTH);
                 imageLabel.setBounds(x1, y1, l1, h1);
                 imageLabel.setIcon(new ImageIcon(imgReduite));
-
-                // Mettre à jour la position de l'image de détection
                 updateDetectionImagePosition();
 
-                // Détection automatique si activée
                 if (autoDetect) {
                     detecter_panneau();
                 }
@@ -253,126 +339,50 @@ public class Interface_image1 extends JFrame {
         }
 
         try {
-            BufferedImage img2 = ImageIO.read(new File("Images_panneaux\\panneau_30.jpg"));
+            File tempFile = File.createTempFile("temp_image", ".jpg");
+            ImageIO.write(originalImage, "jpg", tempFile);
 
-            // Utiliser le facteur d'échelle configuré
-            l2 = (int)(img2.getWidth() * detectionScaleFactor);
-            h2 = (int)(img2.getHeight() * detectionScaleFactor);
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:5000/predict"))
+                .header("Content-Type", "image/jpeg")
+                .POST(HttpRequest.BodyPublishers.ofFile(tempFile.toPath()))
+                .build();
 
-            Image imgReduite2 = img2.getScaledInstance(l2, h2, Image.SCALE_SMOOTH);
-            updateDetectionImagePosition();
-            imageLabel2.setIcon(new ImageIcon(imgReduite2));
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                "Erreur lors de la détection du panneau.",
-                "Erreur",
-                JOptionPane.ERROR_MESSAGE);
-        }
-    }
+            if (response.statusCode() == 200) {
+                JSONObject jsonResponse = new JSONObject(response.body());
+                String detectedClass = jsonResponse.getString("class");
+                String base64Image = jsonResponse.getString("image");
 
-    private void updateDetectionImagePosition() {
-        // Positionner l'image de détection en dessous de l'image principale
-        x2 = x1 + (l1 - l2) / 2;
-        y2 = y1 + h1 + 20;
-        imageLabel2.setBounds(x2, y2, l2, h2);
-    }
+                byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                BufferedImage detectedImage = ImageIO.read(bis);
 
-    private void initializeVLC() {
-        boolean found = new NativeDiscovery().discover();
-        if (!found) {
-            JOptionPane.showMessageDialog(this,
-                "VLC n'a pas été trouvé sur votre système. Veuillez l'installer pour utiliser le lecteur vidéo.",
-                "Erreur",
-                JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+                l2 = (int)(detectedImage.getWidth() * detectionScaleFactor);
+                h2 = (int)(detectedImage.getHeight() * detectionScaleFactor);
+                Image imgReduite2 = detectedImage.getScaledInstance(l2, h2, Image.SCALE_SMOOTH);
 
-        // Create and configure the media player component
-        mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
-        mediaPlayerComponent.setPreferredSize(new Dimension(800, 500));
-        
-        // Configure the video surface
-        videoSurface.removeAll();
-        videoSurface.setLayout(new BorderLayout());
-        videoSurface.add(mediaPlayerComponent, BorderLayout.CENTER);
-        videoSurface.revalidate();
-        videoSurface.repaint();
-    }
+                updateDetectionImagePosition();
+                imageLabel2.setIcon(new ImageIcon(imgReduite2));
 
-    private void openVideo() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter(
-            "Vidéos (*.mp4, *.avi, *.mkv)", "mp4", "avi", "mkv"));
-
-        int retour = fileChooser.showOpenDialog(this);
-        if (retour == JFileChooser.APPROVE_OPTION) {
-            File videoFile = fileChooser.getSelectedFile();
-            try {
-                // Arrêter la lecture en cours si nécessaire
-                stopVideo();
-
-                // Charger la nouvelle vidéo
-                mediaPlayerComponent.mediaPlayer().media().play(videoFile.getAbsolutePath());
-                
-                // Activer le slider
-                progressSlider.setEnabled(true);
-                progressSlider.setValue(0);
-
-                // Démarrer la lecture
-                togglePlay();
-
-                // Force refresh of the video surface
-                videoSurface.revalidate();
-                videoSurface.repaint();
-
-            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
-                    "Erreur lors de l'ouverture de la vidéo: " + ex.getMessage(),
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Panneau détecté : " + detectedClass,
+                    "Résultat de la détection",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                throw new IOException("Erreur lors de la détection : " + response.statusCode());
             }
-        }
-    }
 
-    private void togglePlay() {
-        if (mediaPlayerComponent == null) return;
+            tempFile.delete();
 
-        if (isPlaying) {
-            mediaPlayerComponent.mediaPlayer().controls().pause();
-            progressTimer.stop();
-            isPlaying = false;
-        } else {
-            mediaPlayerComponent.mediaPlayer().controls().play();
-            progressTimer.start();
-            isPlaying = true;
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Erreur lors de la détection du panneau : " + ex.getMessage(),
+                "Erreur",
+                JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void stopVideo() {
-        if (mediaPlayerComponent != null) {
-            mediaPlayerComponent.mediaPlayer().controls().stop();
-            progressTimer.stop();
-            isPlaying = false;
-            progressSlider.setValue(0);
-            progressSlider.setEnabled(false);
-        }
-    }
-
-    private void updateProgress() {
-        if (mediaPlayerComponent != null && isPlaying) {
-            float position = mediaPlayerComponent.mediaPlayer().status().position();
-            progressSlider.setValue((int)(position * 100));
-        }
-    }
-
-    @Override
-    public void dispose() {
-        stopVideo();
-        if (mediaPlayerComponent != null) {
-            mediaPlayerComponent.release();
-        }
-        super.dispose();
     }
 
     public static void main(String[] args) {

@@ -1,9 +1,15 @@
 {
     "java.dependency.packagePresentation": "flat",
     "java.project.referencedLibraries": [
-        "Projet/lib/**/*.jar"
+        "Projet\\lib\\json-20231013.jar",
+        "c:\\Users\\Nizar\\Documents\\TWIZZY\\Projet-reconaissance-de-panneaux\\Projet\\lib\\vlcj-natives-4.8.3.jar",
+        "c:\\Users\\Nizar\\Documents\\TWIZZY\\Projet-reconaissance-de-panneaux\\Projet\\lib\\vlcj-4.8.2.jar",
+        "c:\\Users\\Nizar\\Documents\\TWIZZY\\Projet-reconaissance-de-panneaux\\Projet\\lib\\opencv-2413.jar",
+        "c:\\Users\\Nizar\\Documents\\TWIZZY\\Projet-reconaissance-de-panneaux\\Projet\\lib\\jna-5.13.0.jar",
+        "c:\\Users\\Nizar\\Documents\\TWIZZY\\Projet-reconaissance-de-panneaux\\Projet\\lib\\jna-platform-5.13.0.jar",
+        "c:\\Users\\Nizar\\Documents\\TWIZZY\\Projet-reconaissance-de-panneaux\\Projet\\lib\\json-20231013.jar"
     ],
     "java.project.sourcePaths": [
-        "Projet/src"
+        "Projet\\src"
     ]
 }

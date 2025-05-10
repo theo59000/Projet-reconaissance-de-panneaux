@@ -1,0 +1,16 @@
+# Fichiers de modèle volumineux
+Detection_panneaux-11/my_model.keras
+*.keras
+
+# Fichiers Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Fichiers de configuration
+.vscode/
+.idea/
+
+# Fichiers temporaires
+*.tmp
+*.temp 
