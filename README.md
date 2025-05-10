@@ -12,7 +12,7 @@ Ce projet permet de détecter et reconnaître des panneaux de signalisation à p
 
 1. Cloner le dépôt :
 ```bash
-git clone [URL_DU_REPO]
+git clone https://github.com/theo59000/Projet-reconaissance-de-panneaux.git
 cd Projet-reconaissance-de-panneaux
 ```
 
