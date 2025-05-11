@@ -10,7 +10,7 @@ from ultralytics import YOLO
 app = Flask(__name__)
 
 # Charger le modèle YOLOv8
-model = YOLO("C:\\Users\\chris_cp05xbg\\Documents\\GitHub\\Projet-reconaissance-de-panneaux\\runs\\detect\\train8\\weights\\best.pt")  # Remplace par le chemin de ton modèle, ex : "best.pt"
+model = YOLO("runs\\detect\\train12\\weights\\best.pt")  # Remplace par le chemin de ton modèle, ex : "best.pt"
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -22,7 +22,7 @@ def predict():
     image.save(temp_path)
 
     # Prédiction
-    results = model(temp_path)
+    results = model(temp_path,conf=0.1)
 
     # Dessiner les détections sur l'image
     draw = ImageDraw.Draw(image)
@@ -52,7 +52,7 @@ def predict():
 
     os.remove(temp_path)
 
-    return jsonify({"detections": detections, "image": img_base64})
+    return jsonify({"class": label, "image": img_base64})
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

@@ -1,0 +1,18 @@
+names:
+- speed_110
+- speed_130
+- speed_30
+- speed_50
+- speed_70
+- speed_80
+- speed_90
+nc: 7
+roboflow:
+  license: CC BY 4.0
+  project: detection_panneaux
+  url: https://universe.roboflow.com/roboflowrn/detection_panneaux/dataset/15
+  version: 15
+  workspace: roboflowrn
+test: ../test/images
+train: ../train/images
+val: ../valid/images
