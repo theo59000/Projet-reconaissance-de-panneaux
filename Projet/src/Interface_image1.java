@@ -17,6 +17,9 @@ import java.net.http.HttpResponse;
 import java.net.URI;
 import java.util.Base64;
 import org.json.JSONObject;
+import java.awt.BasicStroke;
+import java.util.List;
+import java.awt.Rectangle;
 
 public class Interface_image1 extends JFrame {
 
@@ -261,8 +264,11 @@ public class Interface_image1 extends JFrame {
         if (imageLabel2.getIcon() != null) {
             ImageIcon icon = (ImageIcon) imageLabel2.getIcon();
             Image img = icon.getImage();
-            l2 = (int)(img.getWidth(null) * detectionScaleFactor);
-            h2 = (int)(img.getHeight(null) * detectionScaleFactor);
+            
+            // Utiliser le même facteur d'échelle que l'image originale
+            l2 = (int)(originalImage.getWidth() * imageScaleFactor);
+            h2 = (int)(originalImage.getHeight() * imageScaleFactor);
+            
             Image imgReduite = img.getScaledInstance(l2, h2, Image.SCALE_SMOOTH);
             imageLabel2.setIcon(new ImageIcon(imgReduite));
             updateDetectionImagePosition();
@@ -270,8 +276,23 @@ public class Interface_image1 extends JFrame {
     }
 
     private void updateDetectionImagePosition() {
+        // Calculer la position pour centrer l'image détectée sous l'image originale
         x2 = x1 + (l1 - l2) / 2;
         y2 = y1 + h1 + 20;
+        
+        // Ajuster l'échelle de l'image détectée pour qu'elle corresponde à l'image originale
+        if (originalImage != null && imageLabel2.getIcon() != null) {
+            ImageIcon icon = (ImageIcon) imageLabel2.getIcon();
+            Image img = icon.getImage();
+            
+            // Utiliser le même facteur d'échelle que l'image originale
+            l2 = (int)(originalImage.getWidth() * imageScaleFactor);
+            h2 = (int)(originalImage.getHeight() * imageScaleFactor);
+            
+            Image imgReduite = img.getScaledInstance(l2, h2, Image.SCALE_SMOOTH);
+            imageLabel2.setIcon(new ImageIcon(imgReduite));
+        }
+        
         imageLabel2.setBounds(x2, y2, l2, h2);
     }
 
@@ -360,6 +381,20 @@ public class Interface_image1 extends JFrame {
                 ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
                 BufferedImage detectedImage = ImageIO.read(bis);
 
+                // Dessiner les rectangles verts sur l'image détectée
+                Graphics2D g2d = detectedImage.createGraphics();
+                g2d.setColor(Color.GREEN);
+                g2d.setStroke(new BasicStroke(3)); // Épaisseur de la ligne
+                
+                // Dessiner un rectangle autour de la zone détectée
+                // Ajuster ces valeurs selon vos besoins
+                int padding = 10;
+                g2d.drawRect(padding, padding, 
+                           detectedImage.getWidth() - 2*padding, 
+                           detectedImage.getHeight() - 2*padding);
+                
+                g2d.dispose();
+
                 l2 = (int)(detectedImage.getWidth() * detectionScaleFactor);
                 h2 = (int)(detectedImage.getHeight() * detectionScaleFactor);
                 Image imgReduite2 = detectedImage.getScaledInstance(l2, h2, Image.SCALE_SMOOTH);
@@ -383,6 +418,19 @@ public class Interface_image1 extends JFrame {
                 "Erreur",
                 JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // Nouvelle méthode pour dessiner les rectangles de détection
+    private void drawDetectionRectangles(BufferedImage image, List<Rectangle> detections) {
+        Graphics2D g2d = image.createGraphics();
+        g2d.setColor(Color.GREEN);
+        g2d.setStroke(new BasicStroke(3)); // Épaisseur de la ligne
+
+        for (Rectangle rect : detections) {
+            g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
+        }
+
+        g2d.dispose();
     }
 
     public static void main(String[] args) {
