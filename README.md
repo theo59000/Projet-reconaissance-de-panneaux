@@ -83,14 +83,29 @@ java -cp "Projet/lib/*;Projet/src" Interface_image1
 ### Détection Vidéo
 1. Cliquez sur "Détection Vidéo" pour ouvrir la fenêtre de détection vidéo
 2. Cliquez sur "Ouvrir Vidéo" pour sélectionner une vidéo
-3. Dessinez une zone ROI sur la vidéo en cliquant et faisant glisser
-4. La détection démarrera automatiquement sur la zone sélectionnée
+3. Utilisez les contrôles de lecture pour naviguer dans la vidéo :
+   - Bouton "Lecture" pour démarrer/mettre en pause
+   - Bouton "Stop" pour arrêter la lecture
+   - Slider pour naviguer dans la vidéo
+
+La détection se fait en deux temps :
+- La vidéo originale est affichée en haut
+- Les détections sont affichées en dessous avec :
+  - Un rectangle vert autour des panneaux détectés
+  - Le type de panneau détecté affiché au-dessus du rectangle
+  - Les résultats de détection mis à jour en temps réel
 
 ### Options
 - Échelle de l'image : Ajustez la taille de l'image principale
 - Échelle de détection : Ajustez la taille de l'image de détection
 - Afficher les bordures : Activez/désactivez l'affichage des bordures
 - Détection automatique : Activez la détection automatique lors du chargement d'une image
+
+### Notes sur la Détection Vidéo
+- La détection est effectuée à intervalles réguliers (1 fois par seconde)
+- Seules les images contenant des panneaux détectés sont envoyées à l'API
+- Les résultats sont affichés en temps réel dans la zone de détection
+- Vous pouvez faire défiler la fenêtre pour voir tous les éléments
 
 ## Structure du Projet
 
