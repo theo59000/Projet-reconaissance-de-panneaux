@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.io.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import javax.imageio.ImageIO;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
@@ -16,6 +17,11 @@ import java.net.http.HttpResponse;
 import java.net.URI;
 import java.util.Base64;
 import org.json.JSONObject;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.highgui.Highgui;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VideoDetectionWindow extends JFrame {
     private static final Color PRIMARY_COLOR = new Color(41, 128, 185);
@@ -25,25 +31,28 @@ public class VideoDetectionWindow extends JFrame {
 
     private JPanel mainPanel;
     private JPanel videoSurface;
+    private JPanel detectedVideoSurface;
     private JPanel controlPanel;
     private EmbeddedMediaPlayerComponent mediaPlayerComponent;
     private JSlider progressSlider;
     private Timer progressTimer;
     private Timer detectionTimer;
+    private Timer apiRequestTimer;
     private boolean isPlaying = false;
-    private Rectangle roiRect;
-    private boolean isDrawingROI = false;
-    private Point startPoint;
-    private JPanel roiPanel;
     private JLabel detectionLabel;
     private JPanel detectionPanel;
+    private static final int FPS = 10; // 10 FPS pour la détection
+    private static final int API_REQUEST_INTERVAL = 1000; // Intervalle de 1 seconde pour les requêtes API
+
+    static {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
 
     public VideoDetectionWindow() {
         super("Détection Vidéo - Reconnaissance de Panneaux");
         setupFrame();
         createMainPanel();
         initializeVLC();
-        initializeROI();
         createDetectionPanel();
         setVisible(true);
     }
@@ -56,13 +65,21 @@ public class VideoDetectionWindow extends JFrame {
     }
 
     private void createMainPanel() {
+        // Créer un JScrollPane comme conteneur principal
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(0, 0, 1000, 800);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        add(scrollPane);
+
+        // Créer le panneau principal qui contiendra tous les éléments
         mainPanel = new JPanel();
         mainPanel.setLayout(null);
-        mainPanel.setBounds(0, 0, 1000, 800);
+        mainPanel.setPreferredSize(new Dimension(1000, 1200)); // Hauteur augmentée pour la vidéo détectée
         mainPanel.setBackground(BACKGROUND_COLOR);
-        add(mainPanel);
+        scrollPane.setViewportView(mainPanel);
 
-        // Surface de lecture vidéo
+        // Surface de lecture vidéo originale
         videoSurface = new JPanel();
         videoSurface.setBounds(50, 50, 800, 500);
         videoSurface.setBackground(Color.BLACK);
@@ -107,6 +124,7 @@ public class VideoDetectionWindow extends JFrame {
     }
 
     private void createDetectionPanel() {
+        // Panel des résultats de détection
         detectionPanel = new JPanel();
         detectionPanel.setLayout(new BoxLayout(detectionPanel, BoxLayout.Y_AXIS));
         detectionPanel.setBounds(50, 670, 800, 100);
@@ -125,6 +143,26 @@ public class VideoDetectionWindow extends JFrame {
         detectionLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         detectionLabel.setForeground(TEXT_COLOR);
         detectionPanel.add(detectionLabel);
+
+        // Panel pour la vidéo détectée
+        JPanel detectedVideoPanel = new JPanel();
+        detectedVideoPanel.setLayout(new BorderLayout());
+        detectedVideoPanel.setBounds(50, 780, 800, 500);
+        detectedVideoPanel.setBackground(new Color(255, 255, 255, 200));
+        detectedVideoPanel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(PRIMARY_COLOR),
+            "Vidéo avec détections",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("Arial", Font.BOLD, 14),
+            PRIMARY_COLOR
+        ));
+        mainPanel.add(detectedVideoPanel);
+
+        // Surface pour afficher la vidéo détectée
+        detectedVideoSurface = new JPanel();
+        detectedVideoSurface.setBackground(Color.BLACK);
+        detectedVideoPanel.add(detectedVideoSurface, BorderLayout.CENTER);
     }
 
     private JButton createStyledButton(String text) {
@@ -169,54 +207,6 @@ public class VideoDetectionWindow extends JFrame {
         videoSurface.repaint();
     }
 
-    private void initializeROI() {
-        roiPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (roiRect != null) {
-                    Graphics2D g2d = (Graphics2D) g;
-                    g2d.setColor(new Color(255, 0, 0, 100));
-                    g2d.fill(roiRect);
-                    g2d.setColor(Color.RED);
-                    g2d.draw(roiRect);
-                }
-            }
-        };
-        roiPanel.setOpaque(false);
-        roiPanel.setBounds(50, 50, 800, 500);
-        mainPanel.add(roiPanel);
-
-        roiPanel.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                startPoint = e.getPoint();
-                isDrawingROI = true;
-                roiRect = null;
-                roiPanel.repaint();
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                isDrawingROI = false;
-                if (roiRect != null && roiRect.width > 10 && roiRect.height > 10) {
-                    startDetectionOnVideo();
-                }
-            }
-        });
-
-        roiPanel.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                if (isDrawingROI) {
-                    int x = Math.min(startPoint.x, e.getX());
-                    int y = Math.min(startPoint.y, e.getY());
-                    int width = Math.abs(e.getX() - startPoint.x);
-                    int height = Math.abs(e.getY() - startPoint.y);
-                    roiRect = new Rectangle(x, y, width, height);
-                    roiPanel.repaint();
-                }
-            }
-        });
-    }
-
     private void openVideo() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new FileNameExtensionFilter(
@@ -251,13 +241,14 @@ public class VideoDetectionWindow extends JFrame {
             if (detectionTimer != null) {
                 detectionTimer.stop();
             }
+            if (apiRequestTimer != null) {
+                apiRequestTimer.stop();
+            }
             isPlaying = false;
         } else {
             mediaPlayerComponent.mediaPlayer().controls().play();
             progressTimer.start();
-            if (roiRect != null) {
-                startDetectionOnVideo();
-            }
+            startDetectionOnVideo();
             isPlaying = true;
         }
     }
@@ -269,11 +260,12 @@ public class VideoDetectionWindow extends JFrame {
             if (detectionTimer != null) {
                 detectionTimer.stop();
             }
+            if (apiRequestTimer != null) {
+                apiRequestTimer.stop();
+            }
             isPlaying = false;
             progressSlider.setValue(0);
             progressSlider.setEnabled(false);
-            roiRect = null;
-            roiPanel.repaint();
             detectionLabel.setText("Aucune détection");
             detectionLabel.setForeground(TEXT_COLOR);
             detectionPanel.repaint();
@@ -287,58 +279,221 @@ public class VideoDetectionWindow extends JFrame {
         }
     }
 
+    private void detectInVideoFrame() {
+        try {
+            BufferedImage frame = mediaPlayerComponent.mediaPlayer().snapshots().get();
+            if (frame != null) {
+                // Convertir BufferedImage en Mat
+                Mat mat = new Mat(frame.getHeight(), frame.getWidth(), CvType.CV_8UC3);
+                byte[] data = ((DataBufferByte) frame.getRaster().getDataBuffer()).getData();
+                mat.put(0, 0, data);
+
+                // Convertir en HSV
+                Mat hsv = new Mat();
+                Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_BGR2HSV);
+
+                // Créer les masques pour les couleurs des panneaux
+                Mat mask1 = new Mat();
+                Mat mask2 = new Mat();
+                Mat mask = new Mat();
+
+                // Rouge (0-10 et 160-180)
+                Core.inRange(hsv, new Scalar(0, 100, 100), new Scalar(10, 255, 255), mask1);
+                Core.inRange(hsv, new Scalar(160, 100, 100), new Scalar(180, 255, 255), mask2);
+                Core.add(mask1, mask2, mask);
+
+                // Appliquer un flou gaussien
+                Imgproc.GaussianBlur(mask, mask, new Size(9, 9), 2, 2);
+
+                // Trouver les contours
+                List<MatOfPoint> contours = new ArrayList<>();
+                Mat hierarchy = new Mat();
+                Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+                // Créer une copie de l'image pour dessiner les rectangles
+                BufferedImage frameWithDetection = new BufferedImage(
+                    frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2d = frameWithDetection.createGraphics();
+                g2d.drawImage(frame, 0, 0, null);
+
+                // Dessiner les rectangles HSV
+                g2d.setColor(Color.GREEN);
+                g2d.setStroke(new BasicStroke(3));
+
+                boolean detectionFound = false;
+                for (MatOfPoint contour : contours) {
+                    Rect rect = Imgproc.boundingRect(contour);
+                    // Filtrer les rectangles trop petits
+                    if (rect.width > 50 && rect.height > 50) {
+                        detectionFound = true;
+                        g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
+                    }
+                }
+
+                g2d.dispose();
+
+                // Mettre à jour l'interface avec l'image originale
+                final BufferedImage finalFrame = frame;
+                SwingUtilities.invokeLater(() -> {
+                    JLabel videoLabel = new JLabel(new ImageIcon(finalFrame));
+                    videoLabel.setBounds(0, 0, videoSurface.getWidth(), videoSurface.getHeight());
+                    videoSurface.removeAll();
+                    videoSurface.add(videoLabel);
+                    videoSurface.revalidate();
+                    videoSurface.repaint();
+                });
+
+                // Libérer les ressources OpenCV
+                mat.release();
+                hsv.release();
+                mask1.release();
+                mask2.release();
+                mask.release();
+                hierarchy.release();
+            }
+        } catch (Exception ex) {
+            System.err.println("Erreur lors de la détection sur la vidéo: " + ex.getMessage());
+        }
+    }
+
     private void startDetectionOnVideo() {
         if (detectionTimer != null) {
             detectionTimer.stop();
         }
+        if (apiRequestTimer != null) {
+            apiRequestTimer.stop();
+        }
 
-        detectionTimer = new Timer(1000, e -> {
-            if (mediaPlayerComponent != null && isPlaying && roiRect != null) {
+        // Timer pour la détection HSV (10 FPS)
+        detectionTimer = new Timer(100, e -> {
+            if (mediaPlayerComponent != null && isPlaying) {
                 detectInVideoFrame();
             }
         });
         detectionTimer.start();
+
+        // Timer pour les requêtes API (1 requête par seconde)
+        apiRequestTimer = new Timer(API_REQUEST_INTERVAL, e -> {
+            if (mediaPlayerComponent != null && isPlaying) {
+                sendFrameToAPI();
+            }
+        });
+        apiRequestTimer.start();
     }
 
-    private void detectInVideoFrame() {
+    private void sendFrameToAPI() {
         try {
             BufferedImage frame = mediaPlayerComponent.mediaPlayer().snapshots().get();
-            if (frame != null && roiRect != null) {
-                BufferedImage roi = frame.getSubimage(
-                    roiRect.x, roiRect.y, roiRect.width, roiRect.height);
+            if (frame != null) {
+                // Convertir BufferedImage en Mat
+                Mat mat = new Mat(frame.getHeight(), frame.getWidth(), CvType.CV_8UC3);
+                byte[] data = ((DataBufferByte) frame.getRaster().getDataBuffer()).getData();
+                mat.put(0, 0, data);
 
-                File tempFile = File.createTempFile("temp_roi", ".jpg");
-                ImageIO.write(roi, "jpg", tempFile);
+                // Convertir en HSV
+                Mat hsv = new Mat();
+                Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_BGR2HSV);
 
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:5000/predict"))
-                    .header("Content-Type", "image/jpeg")
-                    .POST(HttpRequest.BodyPublishers.ofFile(tempFile.toPath()))
-                    .build();
+                // Créer les masques pour les couleurs des panneaux
+                Mat mask1 = new Mat();
+                Mat mask2 = new Mat();
+                Mat mask = new Mat();
 
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                // Rouge (0-10 et 160-180)
+                Core.inRange(hsv, new Scalar(0, 100, 100), new Scalar(10, 255, 255), mask1);
+                Core.inRange(hsv, new Scalar(160, 100, 100), new Scalar(180, 255, 255), mask2);
+                Core.add(mask1, mask2, mask);
 
-                if (response.statusCode() == 200) {
-                    JSONObject jsonResponse = new JSONObject(response.body());
-                    String detectedClass = jsonResponse.getString("class");
-                    
-                    SwingUtilities.invokeLater(() -> {
-                        detectionLabel.setText("Panneau détecté : " + detectedClass);
-                        detectionLabel.setForeground(PRIMARY_COLOR);
-                        detectionPanel.repaint();
-                    });
+                // Appliquer un flou gaussien
+                Imgproc.GaussianBlur(mask, mask, new Size(9, 9), 2, 2);
+
+                // Trouver les contours
+                List<MatOfPoint> contours = new ArrayList<>();
+                Mat hierarchy = new Mat();
+                Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+                for (MatOfPoint contour : contours) {
+                    Rect rect = Imgproc.boundingRect(contour);
+                    // Filtrer les rectangles trop petits
+                    if (rect.width > 50 && rect.height > 50) {
+                        // Créer une copie de l'image pour dessiner les rectangles
+                        BufferedImage frameWithDetection = new BufferedImage(
+                            frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_RGB);
+                        Graphics2D g2d = frameWithDetection.createGraphics();
+                        g2d.drawImage(frame, 0, 0, null);
+
+                        // Dessiner le rectangle HSV
+                        g2d.setColor(Color.GREEN);
+                        g2d.setStroke(new BasicStroke(3));
+                        g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
+
+                        // Extraire la région du panneau pour l'API
+                        BufferedImage roi = frame.getSubimage(
+                            rect.x, rect.y, rect.width, rect.height);
+
+                        // Envoyer à l'API
+                        File tempFile = File.createTempFile("temp_roi", ".jpg");
+                        ImageIO.write(roi, "jpg", tempFile);
+
+                        try {
+                            HttpClient client = HttpClient.newHttpClient();
+                            HttpRequest request = HttpRequest.newBuilder()
+                                .uri(URI.create("http://localhost:5000/predict"))
+                                .header("Content-Type", "image/jpeg")
+                                .POST(HttpRequest.BodyPublishers.ofFile(tempFile.toPath()))
+                                .build();
+
+                            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                            if (response.statusCode() == 200) {
+                                JSONObject jsonResponse = new JSONObject(response.body());
+                                String detectedClass = jsonResponse.getString("class");
+
+                                // Afficher le type de panneau détecté
+                                g2d.setColor(Color.WHITE);
+                                g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                                g2d.drawString(detectedClass, rect.x, rect.y - 5);
+
+                                // Mettre à jour le label de détection
+                                final String finalDetectedClass = detectedClass;
+                                SwingUtilities.invokeLater(() -> {
+                                    detectionLabel.setText("Panneau détecté : " + finalDetectedClass);
+                                    detectionLabel.setForeground(Color.GREEN);
+                                    detectionPanel.repaint();
+                                });
+
+                                // Mettre à jour l'interface avec l'image détectée
+                                final BufferedImage finalFrame = frameWithDetection;
+                                SwingUtilities.invokeLater(() -> {
+                                    JLabel detectionLabel = new JLabel(new ImageIcon(finalFrame));
+                                    detectionLabel.setBounds(0, 0, detectedVideoSurface.getWidth(), detectedVideoSurface.getHeight());
+                                    detectedVideoSurface.removeAll();
+                                    detectedVideoSurface.add(detectionLabel);
+                                    detectedVideoSurface.revalidate();
+                                    detectedVideoSurface.repaint();
+                                });
+                            }
+                        } catch (Exception ex) {
+                            System.err.println("Erreur lors de l'envoi à l'API: " + ex.getMessage());
+                        } finally {
+                            tempFile.delete();
+                        }
+
+                        g2d.dispose();
+                        break; // Sortir après la première détection
+                    }
                 }
 
-                tempFile.delete();
+                // Libérer les ressources OpenCV
+                mat.release();
+                hsv.release();
+                mask1.release();
+                mask2.release();
+                mask.release();
+                hierarchy.release();
             }
         } catch (Exception ex) {
-            System.err.println("Erreur lors de la détection sur la vidéo: " + ex.getMessage());
-            SwingUtilities.invokeLater(() -> {
-                detectionLabel.setText("Erreur de détection : " + ex.getMessage());
-                detectionLabel.setForeground(Color.RED);
-                detectionPanel.repaint();
-            });
+            System.err.println("Erreur lors de la capture de l'image: " + ex.getMessage());
         }
     }
 
