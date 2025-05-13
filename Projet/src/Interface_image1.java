@@ -302,7 +302,7 @@ public class Interface_image1 extends JFrame {
     // Image en arrière-plan
     private void setupBackground() {
         try {
-            ImageIcon icon = new ImageIcon("Images_panneaux\\4fant.jpg");
+            ImageIcon icon = new ImageIcon("Projet\\Images_panneaux\\4fant.jpg");
             Image image = icon.getImage().getScaledInstance(1200, 800, Image.SCALE_SMOOTH);
             ImageIcon scaledIcon = new ImageIcon(image);
             JLabel backgroundLabel = new JLabel(scaledIcon);

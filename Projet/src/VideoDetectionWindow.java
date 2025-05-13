@@ -42,7 +42,7 @@ public class VideoDetectionWindow extends JFrame {
     private JLabel detectionLabel;
     private JPanel detectionPanel;
     private static final int FPS = 10; // 10 FPS pour la détection
-    private static final int API_REQUEST_INTERVAL = 1000; // Intervalle de 1 seconde pour les requêtes API
+    private static final int API_REQUEST_INTERVAL = 500; // Intervalle de 1 seconde pour les requêtes API
 
     static {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -324,7 +324,7 @@ public class VideoDetectionWindow extends JFrame {
                 for (MatOfPoint contour : contours) {
                     Rect rect = Imgproc.boundingRect(contour);
                     // Filtrer les rectangles trop petits
-                    if (rect.width > 50 && rect.height > 50) {
+                    if (rect.width > 25 && rect.height > 25) {
                         detectionFound = true;
                         g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
                     }
