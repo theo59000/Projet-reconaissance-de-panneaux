@@ -1,16 +1,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.*;
 import java.io.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.Desktop;
-import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
-import uk.co.caprica.vlcj.player.base.MediaPlayer;
-import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
-import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -61,6 +54,7 @@ public class Interface_image1 extends JFrame {
         setVisible(true);
     }
 
+    // Taille de l'interface
     private void setupFrame() {
         setSize(1200, 800);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -68,6 +62,7 @@ public class Interface_image1 extends JFrame {
         getContentPane().setBackground(BACKGROUND_COLOR);
     }
 
+    // Création d'un panel pouvant accueillir l'image choisie et détectée
     private void createMainPanel() {
         mainPanel = new JPanel();
         mainPanel.setLayout(null);
@@ -88,6 +83,7 @@ public class Interface_image1 extends JFrame {
         mainPanel.add(imageLabel2);
     }
 
+    // Création d'un panel pouvant accueillir les options et les contrôles
     private void createTabbedPane() {
         tabbedPane = new JTabbedPane();
         tabbedPane.setBounds(900, 50, 250, 400);
@@ -111,6 +107,7 @@ public class Interface_image1 extends JFrame {
         tabbedPane.addTab("Options", new ImageIcon(), optionsPanel);
     }
 
+    // Boutons contenus dans l'onglet contrôles
     private void createControlPanel() {
         // Titre du panneau de contrôle
         JLabel titleLabel = new JLabel("Contrôles");
@@ -162,6 +159,7 @@ public class Interface_image1 extends JFrame {
         return button;
     }
 
+    // Les composants contenus dans l'onglet options
     private void createOptionsPanel() {
         // Titre
         JLabel titleLabel = new JLabel("Paramètres");
@@ -230,6 +228,7 @@ public class Interface_image1 extends JFrame {
         optionsPanel.add(autoDetectPanel);
     }
 
+    // Fonction pour créer un bouton
     private JPanel createOptionPanel(String label) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBackground(new Color(255, 255, 255, 200));
@@ -239,6 +238,7 @@ public class Interface_image1 extends JFrame {
         return panel;
     }
 
+    // Définir les bordures des images 
     private void updateBorders() {
         if (showBorders) {
             imageLabel.setBorder(BorderFactory.createLineBorder(PRIMARY_COLOR, 2));
@@ -249,6 +249,7 @@ public class Interface_image1 extends JFrame {
         }
     }
 
+    // Arrange la taille de l'image choisie sans la couper
     private void refreshMainImage() {
         if (originalImage != null) {
             l1 = (int)(originalImage.getWidth() * imageScaleFactor);
@@ -260,6 +261,7 @@ public class Interface_image1 extends JFrame {
         }
     }
 
+    // Arrange la taille de l'image détectée sans la couper
     private void refreshDetectionImage() {
         if (imageLabel2.getIcon() != null) {
             ImageIcon icon = (ImageIcon) imageLabel2.getIcon();
@@ -275,6 +277,7 @@ public class Interface_image1 extends JFrame {
         }
     }
 
+    // Cette fonction met a jour la position de l'image détectée
     private void updateDetectionImagePosition() {
         // Calculer la position pour centrer l'image détectée sous l'image originale
         x2 = x1 + (l1 - l2) / 2;
@@ -296,6 +299,7 @@ public class Interface_image1 extends JFrame {
         imageLabel2.setBounds(x2, y2, l2, h2);
     }
 
+    // Image en arrière-plan
     private void setupBackground() {
         try {
             ImageIcon icon = new ImageIcon("Images_panneaux\\4fant.jpg");

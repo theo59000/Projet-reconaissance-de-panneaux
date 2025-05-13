@@ -10,7 +10,7 @@ from ultralytics import YOLO
 app = Flask(__name__)
 
 # Charger le modèle YOLOv8
-model = YOLO("runs\\detect\\train12\\weights\\best.pt")  # Remplace par le chemin de ton modèle, ex : "best.pt"
+model = YOLO("runs\\detect\\train13\\weights\\best.pt")  # Remplace par le chemin de ton modèle, ex : "best.pt"
 
 @app.route("/predict", methods=["POST"])
 def predict():
