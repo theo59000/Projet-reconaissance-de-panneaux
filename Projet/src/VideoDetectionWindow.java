@@ -415,7 +415,7 @@ public class VideoDetectionWindow extends JFrame {
                 for (MatOfPoint contour : contours) {
                     Rect rect = Imgproc.boundingRect(contour);
                     // Filtrer les rectangles trop petits
-                    if (rect.width > 50 && rect.height > 50) {
+                    if (rect.width > 25 && rect.height > 25) {
                         // Créer une copie de l'image pour dessiner les rectangles
                         BufferedImage frameWithDetection = new BufferedImage(
                             frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_RGB);
